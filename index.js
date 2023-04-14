@@ -1,5 +1,7 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
+const Person = require('./models/person')
 const app = express()
 app.use(express.json())
 
@@ -9,37 +11,17 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :c
 app.use(express.static('build'))
 
 
-persons = [
-  {
-    "id": 1,
-    "name": "Arto Hellas",
-    "number": "040-123456",
-  },
-  {
-    "id": 2,
-    "name": "Barbara Lumen",
-    "number": "543-6023402",
-  },
-  {
-    "id": 3,
-    "name": "Clive Owen",
-    "number": "550-554333",
-  },
-  {
-    "id": 4,
-    "name": "Daria Roberts",
-    "number": "113-6445435",
-  },
-]
-
+let persons = []
 
 app.get('/api/persons', (req, res) => {
-  res.json(persons)
+  Person.find({}).then(persons => {
+    res.json(persons)
+  })
 })
 
 app.get('/info', (req, res) => {
   res.send(`
-  <p>Phonebook has info for ${persons.length} people</p>
+  <p>Phonebook has info for ${Person.estimatedDocumentCount()} people</p>
   <p>${new Date}</p>
   `)
 })
@@ -62,33 +44,16 @@ app.delete('/api/persons/:id', (req, res) => {
   res.status(204).end()
 })
 
-getId = () => {
-  const id = Math.floor(Math.random() * 1000)
-  return persons.find(person => person.id === id) ? getId() : id
-}
-
 app.post('/api/persons', (req, res) => {
-  if (!req.body.name) {
-    return res.status(400).json({error: 'name missing'})
-  }
-  if (!req.body.number) {
-    return res.status(400).json({error: 'number missing'})
-  }
-  if (persons.find(person => person.name === req.body.name)) {
-    return res.status(400).json({error: `${req.body.name} is already in phonebook`})
-  }
-
-  const person = {
-    id: getId(),
-    name: req.body.name,
-    number: req.body.number,
-  }
-  
-  persons = persons.concat(person)
-  
-  res.json(person)
-  
+  const body = req.body
+  const person = new Person({
+    name: body.name,
+    number: body.number
+  })
+  person.save().then(savedPerson => {
+    res.json(savedPerson)
+  })
 })
 
-
-app.listen(3001)
+const PORT = process.env.PORT
+app.listen(PORT)
