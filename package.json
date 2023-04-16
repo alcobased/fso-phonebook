@@ -7,7 +7,7 @@
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon index.js",
-    "build:ui": "@powershell if (Test-Path ./build/) {Remove-Item ./build/ -Recurse -Force} && cd ../../part2/phonebook/ && npm run build && @powershell Copy-Item ./build/ -Recurse ../../part3/phonebook/",
+    "build:ui": "@powershell if (Test-Path ./build/) {Remove-Item ./build/ -Recurse -Force} && cd ../../frontend/phonebook/ && npm run build && @powershell Copy-Item ./build/ ../../backend/phonebook/ -Recurse",
     "deploy": "git add . && git commit -m uibuild && git push",
     "deploy:full": "npm run build:ui && npm run deploy"
   },
