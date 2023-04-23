@@ -15,9 +15,13 @@ const requestLogger = (request, response, next) => {
 
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)
+
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
-  } 
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
+  }
+
   next(error)
 }
 
@@ -36,9 +40,7 @@ app.get('/api/persons', (req, res, next) => {
     .then(persons => {
       res.json(persons)
     })
-    .catch(error => {
-      next(error)
-    })
+    .catch(error => next(error))
 })
 
 app.post('/api/persons', (req, res, next) => {
@@ -51,9 +53,7 @@ app.post('/api/persons', (req, res, next) => {
     .then(savedPerson => {
       res.json(savedPerson)
     })
-    .catch(error => {
-      next(error)
-    })
+    .catch(error => next(error))
 })
 
 app.delete('/api/persons/:id', (req, res, next) => {
@@ -61,8 +61,7 @@ app.delete('/api/persons/:id', (req, res, next) => {
     .then(result => {
       res.status(204).end()
     })
-    .catch(error => next(error)
-    )
+    .catch(error => next(error))
 })
 
 app.get('/api/persons/:id', (req, res, next) => {
@@ -83,11 +82,14 @@ app.put('/api/persons/:id', (req, res, next) => {
     name: req.body.name,
     number: req.body.number
   }
-  Person.findByIdAndUpdate(req.params.id, person, {new: true})
+  Person.findByIdAndUpdate(req.params.id, person, { new: true, runValidators: true, context: 'query' })
     .then(updatedPerson => {
       res.json(updatedPerson)
     })
-    .catch(error => next(error))
+    .catch(error => {
+      console.log('error test:', error)
+      next(error)
+    })
 })
 
 app.get('/info', (req, res) => {
